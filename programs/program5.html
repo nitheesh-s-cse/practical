@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Program 5 (a) – Border Layout Control</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs/loader.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#2b2b2b; --panel:#323233; --accent:#0e639c; --muted:#9da5ae; --text:#cccccc;
+      --sidebar-width:260px; --topbar-height:36px; --statusbar-height:22px;
+    }
+    html,body{height:100%;margin:0;font-family:Segoe UI,Roboto,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);}
+    .ide-container{display:flex;flex-direction:column;height:100vh;}
+    .topbar{height:var(--topbar-height);display:flex;align-items:center;background:linear-gradient(#333,#2b2b2b);padding:0 8px;color:var(--text);border-bottom:1px solid rgba(0,0,0,.6);}
+    .topbar .menu{display:flex;gap:8px;font-size:13px;color:var(--muted);user-select:none;}
+    .toolbar{margin-left:auto;display:flex;gap:6px;align-items:center;}
+    .tool-btn{background:transparent;border:0;color:var(--muted);padding:6px 8px;border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:6px;}
+    .tool-btn:hover{background:rgba(255,255,255,0.03);color:var(--text);}
+    .workspace{flex:1;display:flex;overflow:hidden;}
+    .sidebar{width:var(--sidebar-width);background:linear-gradient(#2f2f2f,#2a2a2a);padding:10px;color:var(--text);box-shadow:2px 0 6px rgba(0,0,0,.6);display:flex;flex-direction:column;gap:8px;}
+    .package-explorer{flex:1;background:linear-gradient(#2b2b2b,#262626);padding:8px;border-radius:4px;overflow:auto;font-size:13px;font-family:monospace;white-space:pre;color:var(--text);}
+    .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    .editor-top{display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,.04);background:linear-gradient(#2a2a2a,#242424);padding:0 8px;height:34px;}
+    .tabs{display:flex;gap:6px;align-items:center;}
+    .tab{padding:6px 10px;background:transparent;border-radius:3px;color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center;cursor:pointer;}
+    .tab.active{background:linear-gradient(#1a3a50,#113842);color:#fff;border:1px solid rgba(0,0,0,0.4);}
+    .editor{flex:1;position:relative;display:flex;flex-direction:column;}
+    #editor{height:100%;width:100%;}
+    .bottom-panel{height:160px;background:#1e1e1e;border-top:1px solid rgba(255,255,255,.04);display:flex;flex-direction:column;}
+    .console-header{background:#2a2a2a;color:var(--muted);padding:6px 10px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03);}
+    .console-output{padding:8px;color:#dcdcdc;font-family:monospace;overflow:auto;background:linear-gradient(#1c1c1c,#161616);flex:1;white-space:pre;}
+    .statusbar{height:var(--statusbar-height);background:#151515;color:var(--muted);display:flex;align-items:center;padding:0 8px;font-size:12px;border-top:1px solid rgba(255,255,255,.03);}
+    .status-right{margin-left:auto;display:flex;gap:12px;align-items:center;color:var(--muted);font-size:12px;}
+    .editor .monaco-editor{height:100% !important;width:100% !important;}
+  </style>
+</head>
+<body>
+<div class="ide-container">
+  <div class="topbar">
+    <div class="menu"><span>File</span><span>Edit</span><span>Navigate</span><span>Run</span></div>
+    <div class="toolbar">
+      <button class="tool-btn" title="New File">📄 New</button>
+      <button class="tool-btn" title="Save (Ctrl+S)">💾 Save</button>
+      <button id="runBtnTop" class="tool-btn" title="Run (Ctrl+F11)">▶ Run</button>
+      <button class="tool-btn" title="Debug">🐞 Debug</button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <div class="sidebar">
+      <h3 style="margin:0 0 8px 0;font-size:12px;color:var(--muted);">Package Explorer</h3>
+      <div class="package-explorer">
+gui
+└─ src
+   └─ BorderLayoutExample.java
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">JRE System Library: JavaSE-11</div>
+    </div>
+
+    <div class="main-area">
+      <div class="editor-top">
+        <div class="tabs">
+          <div class="tab active">BorderLayoutExample.java</div>
+          <div class="tab">README.md</div>
+        </div>
+        <div style="margin-left:8px;color:var(--muted);font-size:12px">Java - gui/src</div>
+      </div>
+
+      <div class="editor">
+        <div id="editor"></div>
+      </div>
+
+      <div class="bottom-panel">
+        <div class="console-header">Console</div>
+        <div id="console" class="console-output">Ready.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <div class="muted">Workspace: sempractical</div>
+    <div class="status-right">
+      <div class="muted">UTF-8</div>
+      <div class="muted">Java 11</div>
+      <div class="muted">Line: 1, Col: 1</div>
+    </div>
+  </div>
+</div>
+
+<script>
+require.config({ paths:{ vs:"https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.0/min/vs" }});
+require(["vs/editor/editor.main"],function(){
+  const code = `import javax.swing.*;
+import java.awt.*;
+
+public class BorderLayoutExample {
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Border Layout Example");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout(10, 10));
+        frame.add(new JButton("North"), BorderLayout.NORTH);
+        frame.add(new JButton("South"), BorderLayout.SOUTH);
+        frame.add(new JButton("East"),  BorderLayout.EAST);
+        frame.add(new JButton("West"),  BorderLayout.WEST);
+        frame.add(new JButton("Center"), BorderLayout.CENTER);
+        frame.setSize(400, 300);
+        frame.setVisible(true);
+    }
+}`;
+  const editor = monaco.editor.create(document.getElementById("editor"),{
+    value:code, language:"java", theme:"vs-dark", readOnly:true,
+    automaticLayout:true, minimap:{enabled:false}, fontSize:13, lineNumbers:"on"
+  });
+
+  const statusCol = document.querySelector('.status-right div:last-child');
+  editor.onDidChangeCursorPosition(e=>{
+    statusCol.textContent = `Line: ${e.position.lineNumber}, Col: ${e.position.column}`;
+  });
+
+  function appendConsole(text){
+    const c = document.getElementById('console');
+    c.textContent = text;
+    c.scrollTop = c.scrollHeight;
+  }
+
+  document.getElementById('runBtnTop').addEventListener('click', ()=>{
+    appendConsole(
+`+----------------------------+
+|           North            |
+|West     Center     East    |
+|           South            |
++----------------------------+`);
+  });
+});
+</script>
+</body>
+</html>

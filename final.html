@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Java Eclipse Simulator — Programs</title>
+  <style>
+    :root{
+      --bg:#0f1720; --panel:#111318; --muted:#98a0aa; --glass: rgba(255,255,255,0.03);
+      --radius:10px; --max-width:1100px; --gap:16px;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: linear-gradient(180deg, var(--bg), #07101a); color: #e6eef6; -webkit-font-smoothing: antialiased; line-height: 1.45; }
+    
+    .topnav { display: flex; justify-content: space-between; align-items: center; background: #007acc; color: white; padding: 12px 24px; }
+    .topnav h1 { font-size: 22px; margin: 0; }
+    .topnav a { background: #1e1e1e; color: white; padding: 8px 14px; border: none; border-radius: 4px; text-decoration: none; font-size: 14px; cursor: pointer; }
+    .topnav a:hover { background: #0e639c; }
+
+    main { max-width: var(--max-width); margin: 24px auto; padding: 0 20px; display: grid; grid-template-columns: 300px 1fr; gap: var(--gap); align-items: start; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+    aside { background: var(--panel); border-radius: var(--radius); padding: 16px; border: 1px solid var(--glass); box-shadow: 0 6px 18px rgba(1, 6, 15, 0.5); }
+    .toc-title { font-size: 13px; color: var(--muted); margin: 0 0 10px 0; }
+    .toc { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow: auto; }
+    .toc button { background: transparent; border: 0; text-align: left; padding: 8px; border-radius: 8px; color: #d9e6f5; cursor: pointer; width: 100%; }
+    .toc button:hover { background: rgba(255, 255, 255, 0.02); }
+    .search { display: flex; gap: 8px; margin: 12px 0 8px; }
+    .search input { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); background: transparent; color: inherit; }
+    .search button { background: transparent; border: 1px solid rgba(255, 255, 255, 0.04); color: #98a0aa; padding: 8px; border-radius: 8px; cursor: pointer; }
+
+    section.content { display: flex; flex-direction: column; gap: 14px; }
+    .card { background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.005)); border: 1px solid var(--glass); padding: 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6); }
+    .card .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .meta { font-size: 13px; color: var(--muted); }
+    .instructions { font-size: 13px; color: #cfe6ff; padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.02); background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent); }
+    .btn { background: #007acc; color: white; border-radius: 8px; padding: 8px 12px; border: 0; cursor: pointer; font-weight: 600; }
+    .btn:hover { transform: translateY(-2px); }
+
+    footer { max-width: var(--max-width); margin: 24px auto 56px; padding: 0 20px; color: var(--muted); font-size: 13px; text-align: center; }
+    .toast { position: fixed; right: 16px; bottom: 16px; background: #0b1220; color: #dff7ff; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.04); display: none; }
+  </style>
+</head>
+<body>
+  <div class="topnav">
+    <h1>Java Eclipse Simulator</h1>
+    <a href="index.html">⬅ Back</a>
+  </div>
+
+  <main>
+    <aside>
+      <div class="toc-title">Table of Contents</div>
+      <div class="search">
+        <input id="filter" placeholder="Filter programs (type to search)" />
+        <button onclick="resetFilter()">✕</button>
+      </div>
+      <ul id="toc" class="toc"></ul>
+      <div style="margin-top: 12px; color: var(--muted); font-size: 13px;">Open in Eclipse: Create Project → Package → Class → Paste code → Run</div>
+    </aside>
+
+    <section class="content" id="content"></section>
+  </main>
+
+  <footer>© Java Eclipse Simulator — Ready-made student programs</footer>
+  <div id="toast"></div>
+
+  <script>
+    const programs = [
+      {id:'1', title:"Outer & Inner Class", project:"OuterInnerProject", pkg:"outerinner", cls:"OuterInner"},
+      {id:'2', title:"Multithreading Example", project:"ThreadDemo", pkg:"threads", cls:"MultiThreadDemo"},
+      {id:'3', title:"Employee Payroll System", project:"EmployeeSystem", pkg:"employee", cls:"EmployeePayroll"},
+      {id:'4', title:"File Information Reader", project:"FileReaderDemo", pkg:"fileinfo", cls:"FileInfo"},
+      {id:'5a', title:"Border Layout (Swing)", project:"LayoutDemo", pkg:"gui", cls:"BorderLayoutExample"},
+      {id:'5b', title:"Padding Layout (Swing)", project:"LayoutDemo", pkg:"gui", cls:"PaddingExample"},
+      {id:'6', title:"Outer & Inner Class (Duplicate)", project:"OuterInnerDuplicate", pkg:"outerinner2", cls:"Main"},
+      {id:'7', title:"Shape Polymorphism", project:"ShapePolymorphism", pkg:"polymorphism", cls:"Main"},
+      {id:'8a', title:"Static Variables, Methods & Blocks", project:"StaticExample", pkg:"staticdemo", cls:"StaticDemo"},
+      {id:'8b', title:"Room Reuse Class", project:"ReuseClass", pkg:"reuseclass", cls:"House"}
+    ];
+
+    const snippets = {
+      '1': `package outerinner;
+
+public class OuterInner {
+    public static void main(String[] args) {
+        Outer o = new Outer();
+        o.display();
+        Outer.Inner i = o.new Inner();
+        i.display();
+    }
+}
+
+class Outer {
+    void display() {
+        System.out.println("This is outer class");
+    }
+
+    class Inner {
+        void display() {
+            System.out.println("This is inner class");
+        }
+    }
+}`,
+      '2': `package threads;
+
+class CoffeeThread extends Thread {
+    public void run() {
+        try {
+            System.out.println(Thread.currentThread().getName() +
+                    ": Java is hot, aromatic, and invigorating");
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+public class MultiThreadDemo {
+    public static void main(String[] args) {
+        CoffeeThread t1 = new CoffeeThread();
+        CoffeeThread t2 = new CoffeeThread();
+
+        t1.setName("Thread-1");
+        t2.setName("Thread-2");
+
+        t1.start();
+        t2.start();
+    }
+}`,
+      '3': `package employee;
+
+import java.util.Scanner;
+
+class Employee {
+    String empName, empId, address, mailId;
+    long mobileNo;
+    double basicPay;
+
+    void getDetails() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter Employee Name: ");
+        empName = sc.nextLine();
+        System.out.print("Enter Employee ID: ");
+        empId = sc.nextLine();
+        System.out.print("Enter Address: ");
+        address = sc.nextLine();
+        System.out.print("Enter Mail ID: ");
+        mailId = sc.nextLine();
+        System.out.print("Enter Mobile Number: ");
+        mobileNo = sc.nextLong();
+        System.out.print("Enter Basic Pay: ");
+        basicPay = sc.nextDouble();
+    }
+
+    void generatePaySlip() {
+        double da = 0.97 * basicPay;        // Dearness Allowance
+        double hra = 0.10 * basicPay;       // House Rent Allowance
+        double pf = 0.12 * basicPay;        // Provident Fund
+        double staffClubFund = 0.001 * basicPay;
+        double grossSalary = basicPay + da + hra;
+        double netSalary = grossSalary - (pf + staffClubFund);
+
+        System.out.println("-------------------------------------------");
+        System.out.println("               PAY SLIP");
+        System.out.println("-------------------------------------------");
+        System.out.println("Employee Name     : " + empName);
+        System.out.println("Employee ID       : " + empId);
+        System.out.println("Address           : " + address);
+        System.out.println("Mail ID           : " + mailId);
+        System.out.println("Mobile Number     : " + mobileNo);
+        System.out.println("-------------------------------------------");
+        System.out.println("Basic Pay         : " + basicPay);
+        System.out.println("DA (97%)          : " + da);
+        System.out.println("HRA (10%)         : " + hra);
+        System.out.println("PF (12%)          : " + pf);
+        System.out.println("Staff Club Fund   : " + staffClubFund);
+        System.out.println("-------------------------------------------");
+        System.out.println("Gross Salary      : " + grossSalary);
+        System.out.println("Net Salary        : " + netSalary);
+        System.out.println("-------------------------------------------");
+    }
+}
+
+class Programmer extends Employee {}
+class AssistantProfessor extends Employee {}
+class AssociateProfessor extends Employee {}
+class Professor extends Employee {}
+
+public class EmployeePayroll {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Choose Employee Type:");
+        System.out.println("1. Programmer");
+        System.out.println("2. Assistant Professor");
+        System.out.println("3. Associate Professor");
+        System.out.println("4. Professor");
+        System.out.print("Enter your choice: ");
+        int choice = sc.nextInt();
+
+        Employee emp;
+        switch (choice) {
+            case 1 -> emp = new Programmer();
+            case 2 -> emp = new AssistantProfessor();
+            case 3 -> emp = new AssociateProfessor();
+            case 4 -> emp = new Professor();
+            default -> {
+                System.out.println("Invalid choice!");
+                return;
+            }
+        }
+
+        emp.getDetails();
+        emp.generatePaySlip();
+    }
+}`,
+      '4': `package fileinfo;
+
+import java.io.File;
+import java.util.Scanner;
+
+public class FileInfo {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Enter the file name (with path if not in current directory): ");
+        String fileName = sc.nextLine();
+
+        File file = new File(fileName);
+
+        System.out.println("\\nFile Information:");
+        System.out.println("-----------------------------");
+
+        if (!file.exists()) {
+            System.out.println("File does not exist!");
+        } else {
+            System.out.println("File Name         : " + file.getName());
+            System.out.println("Absolute Path     : " + file.getAbsolutePath());
+            System.out.println("Readable          : " + file.canRead());
+            System.out.println("Writable          : " + file.canWrite());
+            System.out.println("Executable        : " + file.canExecute());
+            System.out.println("Type              : " + (file.isFile() ? "Regular File" : "Directory"));
+            System.out.println("File Size (bytes) : " + file.length());
+        }
+
+        System.out.println("-----------------------------");
+    }
+}`,
+      '5a': `import javax.swing.*;
+import java.awt.*;
+
+public class BorderLayoutExample {
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Border Layout Example");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout(10, 10));
+        frame.add(new JButton("North"), BorderLayout.NORTH);
+        frame.add(new JButton("South"), BorderLayout.SOUTH);
+        frame.add(new JButton("East"), BorderLayout.EAST);
+        frame.add(new JButton("West"), BorderLayout.WEST);
+        frame.add(new JButton("Center"), BorderLayout.CENTER);
+        frame.setSize(400, 300);
+        frame.setVisible(true);
+    }
+}`,
+      '5b': `import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+
+public class PaddingExample {
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Padding Layout Example");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel panel = new JPanel(new FlowLayout());
+        panel.setBorder(new EmptyBorder(20, 40, 20, 40));
+        panel.add(new JLabel("Enter your name:"));
+        panel.add(new JTextField(15));
+        panel.add(new JButton("Submit"));
+        frame.add(panel);
+        frame.pack();
+        frame.setVisible(true);
+    }
+}`,
+      '6': `package outerinner2;
+
+class Outer {
+    void display() {
+        System.out.println("This is the display method of the Outer class.");
+    }
+
+    class Inner {
+        void display() {
+            System.out.println("This is the display method of the Inner class.");
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Outer outerObj = new Outer();        // create object for Outer
+        outerObj.display();                  // call Outer class display()
+
+        Outer.Inner innerObj = outerObj.new Inner();  // create Inner class object
+        innerObj.display();                  // call Inner class display()
+    }
+}`,
+      '7': `package polymorphism;
+
+class Shape {
+    void draw() {
+        System.out.println("Drawing a shape...");
+    }
+    void erase() {
+        System.out.println("Erasing a shape...");
+    }
+}
+
+class Circle extends Shape {
+    void draw() {
+        System.out.println("Drawing a Circle");
+    }
+    void erase() {
+        System.out.println("Erasing a Circle");
+    }
+}
+
+class Triangle extends Shape {
+    void draw() {
+        System.out.println("Drawing a Triangle");
+    }
+    void erase() {
+        System.out.println("Erasing a Triangle");
+    }
+}
+
+class Square extends Shape {
+    void draw() {
+        System.out.println("Drawing a Square");
+    }
+    void erase() {
+        System.out.println("Erasing a Square");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Shape s;
+
+        s = new Circle();
+        s.draw();
+        s.erase();
+        System.out.println();
+
+        s = new Triangle();
+        s.draw();
+        s.erase();
+        System.out.println();
+
+        s = new Square();
+        s.draw();
+        s.erase();
+    }
+}`,
+      '8a': `package staticdemo;
+
+public class StaticDemo {
+    static int count = 0;  // static variable (shared by all objects)
+    int id;                // instance variable (unique per object)
+
+    // Static block: runs only once when class is loaded into memory
+    static {
+        System.out.println("Static block executed before main() method.");
+    }
+
+    // Constructor: called every time a new object is created
+    StaticDemo() {
+        count++;
+        id = count;
+    }
+
+    // Static method: belongs to class, can be called without an object
+    static void displayCount() {
+        System.out.println("Number of objects created: " + count);
+    }
+
+    // Non-static (instance) method: can access instance variables
+    void showId() {
+        System.out.println("Object ID: " + id);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("Main method started.");
+
+        StaticDemo obj1 = new StaticDemo();
+        StaticDemo obj2 = new StaticDemo();
+        StaticDemo obj3 = new StaticDemo();
+
+        obj1.showId();
+        obj2.showId();
+        obj3.showId();
+
+        StaticDemo.displayCount();
+    }
+}`,
+      '8b': `package reuseclass;
+
+class Room {
+    double length;
+    double breadth;
+
+    // Constructor to initialize length and breadth
+    Room(double l, double b) {
+        length = l;
+        breadth = b;
+    }
+
+    // Method to calculate area of the room
+    double area() {
+        return length * breadth;
+    }
+}
+
+public class House {
+    public static void main(String[] args) {
+        Room bedroom = new Room(10, 12);
+        Room kitchen = new Room(8, 10);
+        Room hall = new Room(15, 20);
+
+        System.out.println("Area of Bedroom: " + bedroom.area() + " sq.ft");
+        System.out.println("Area of Kitchen: " + kitchen.area() + " sq.ft");
+        System.out.println("Area of Hall: " + hall.area() + " sq.ft");
+    }
+}`
+    };
+
+    const tocEl = document.getElementById('toc');
+    const contentEl = document.getElementById('content');
+    const filterInput = document.getElementById('filter');
+
+    function buildUI(list) {
+      tocEl.innerHTML = '';
+      contentEl.innerHTML = '';
+      list.forEach(p => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.textContent = `${p.id} — ${p.title}`;
+        btn.onclick = () => scrollToCard(p.id);
+        li.appendChild(btn);
+        tocEl.appendChild(li);
+
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.id = 'card-' + p.id;
+        card.innerHTML = `
+          <div class="head">
+            <div>
+              <div style="font-size:16px;font-weight:700">${p.id} — ${p.title}</div>
+              <div class="meta">${p.project} • package <strong>${p.pkg}</strong> • class <strong>${p.cls}</strong></div>
+            </div>
+            <div>
+              <button class="btn" onclick="copyCode('${p.id}')">Copy</button>
+            </div>
+          </div>
+          <div class="instructions">
+            Quick steps — Create project <strong>${p.project}</strong>, package <strong>${p.pkg}</strong>, class <strong>${p.cls}</strong>, paste code and run.
+          </div>`;
+        contentEl.appendChild(card);
+      });
+    }
+
+    function scrollToCard(id) {
+      const el = document.getElementById('card-' + id);
+      if (el) el.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }
+
+    function copyCode(id) {
+      const raw = snippets[id];
+      if (!raw) return notify('No code available');
+
+      // 1) convert tabs -> 4 spaces (avoid tab-mix)
+      // 2) normalize all line endings to CRLF for Windows editors (Notepad)
+      const code = raw.replace(/\t/g, '    ').replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n/g, '\r\n');
+
+      // Prefer modern Clipboard API (preserves exact string)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(
+          () => notify('✓ Code copied to clipboard'),
+          () => fallbackCopy(code)
+        );
+        return;
+      }
+
+      // Fallback: hidden textarea to preserve indentation and line endings
+      fallbackCopy(code);
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'absolute';
+        ta.style.left = '-9999px';
+        ta.style.whiteSpace = 'pre';
+        ta.style.fontFamily = 'monospace';
+        ta.wrap = 'off';
+        document.body.appendChild(ta);
+
+        // Select full content
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+
+        try {
+          const ok = document.execCommand('copy');
+          notify(ok ? '✓ Code copied to clipboard' : '✗ Copy failed — select & copy manually');
+        } catch (err) {
+          notify('✗ Copy not supported in this browser');
+        } finally {
+          document.body.removeChild(ta);
+        }
+      }
+    }
+
+    function notify(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.display = 'none'; }, 1800);
+    }
+
+    function resetFilter() {
+      filterInput.value = '';
+      render();
+      filterInput.focus();
+    }
+
+    function render() {
+      const q = filterInput.value.trim().toLowerCase();
+      const filtered = q
+        ? programs.filter(p => (p.title + ' ' + p.project + ' ' + p.pkg + ' ' + p.cls).toLowerCase().includes(q))
+        : programs;
+      buildUI(filtered);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      filterInput.addEventListener('input', render);
+      render();
+    });
+  </script>
+</body>
+</html>
